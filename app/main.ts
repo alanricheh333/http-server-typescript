@@ -10,13 +10,16 @@ const server = net.createServer((socket) => {
         const request = data.toString();
         console.log("Request: ", request);
         
-        const path = request.split(" ")[1];
+        var requestSplit = request.split(" ");
+        const method = requestSplit[0];
+
+        const path = requestSplit[1];
         console.log("Path: ", path);
 
         const params = path.split('/')[1];
         console.log("Params: ", params);
 
-        const response = generateResponseFromRequest(request, path, params);
+        const response = generateResponseFromRequest(request, method, path, params);
         socket.write(response);
 
         socket.end();
