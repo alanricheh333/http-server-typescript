@@ -12,11 +12,12 @@ export function generateResponseFromRequest(request: string, method:string, path
             const userAgent = request.split('User-Agent: ')[1].split('\r\n')[0]
             return `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`;
         case 'files':
+            const fileName = path.split('/')[2]
+            const args = process.argv.slice(2);
+            const [___, absPath] = args;
+            const filePath = absPath + "/" + fileName;
+
             if (method == "GET") {
-                const fileName = path.split('/')[2]
-                const args = process.argv.slice(2);
-                const [___, absPath] = args;
-                const filePath = absPath + "/" + fileName;
 
                 try {
                     const content = fs.readFileSync(filePath);
@@ -26,11 +27,8 @@ export function generateResponseFromRequest(request: string, method:string, path
                     console.log('File does not exist');
                     return 'HTTP/1.1 404 Not Found\r\n\r\n';
                 }
+
             } else if (method == "POST") {
-                const fileName = path.split('/')[2];
-                const args = process.argv.slice(2);
-                const [___, absPath] = args;
-                const filePath = absPath + "/" + fileName;
 
                 // Extract the body of the request
                 const bodyStartIndex = request.indexOf('\r\n\r\n') + 4;
