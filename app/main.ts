@@ -1,5 +1,5 @@
 import * as net from "net";
-import { generateResponseFromRequest } from "./helper";
+import { extractHeaders, generateResponseFromRequest, injectCompressedResponse } from "./helper";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
@@ -11,7 +11,12 @@ const server = net.createServer((socket) => {
         console.log("Request: ", request);
         
         var requestSplit = request.split(" ");
+
+        const headers = extractHeaders(request);
+        console.log("Headers: ", headers);
+
         const method = requestSplit[0];
+        console.log("Method: ", method);
 
         const path = requestSplit[1];
         console.log("Path: ", path);
@@ -19,7 +24,8 @@ const server = net.createServer((socket) => {
         const params = path.split('/')[1];
         console.log("Params: ", params);
 
-        const response = generateResponseFromRequest(request, method, path, params);
+        var response = generateResponseFromRequest(request, method, path, params, headers);
+        response = injectCompressedResponse(request, response);
         socket.write(response);
 
         socket.end();

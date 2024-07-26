@@ -1,7 +1,8 @@
 
 import fs from 'node:fs';
 
-export function generateResponseFromRequest(request: string, method:string, path: string, param: string): string {
+export function generateResponseFromRequest(request: string, method:string, path: string, param: string, headers: string[]): string {
+
     switch (param) {
         case '':
             return 'HTTP/1.1 200 OK\r\n\r\n';
@@ -9,7 +10,7 @@ export function generateResponseFromRequest(request: string, method:string, path
             const message = path.split('/')[2]
             return `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${message.length}\r\n\r\n${message}`;
         case 'user-agent':
-            const userAgent = request.split('User-Agent: ')[1].split('\r\n')[0]
+            const userAgent = headers.find(header => header.startsWith('User-Agent: '))?.split('User-Agent: ')[1] || ''; //request.split('User-Agent: ')[1].split('\r\n')[0]
             return `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`;
         case 'files':
             const fileName = path.split('/')[2]
@@ -47,5 +48,33 @@ export function generateResponseFromRequest(request: string, method:string, path
 
         default:
             return 'HTTP/1.1 404 Not Found\r\n\r\n';
+    }
+}
+
+export function extractHeaders(request: string): string[] {
+    return request.split('\r\n');
+}
+
+export function extractCertainHeader(request: string, header: string): string {
+    for(const head of extractHeaders(request)) {
+        if(head.startsWith(header)) {
+            return head.split(header)[1];
+        }
+    }
+    return '';
+}
+
+export function injectCompressedResponse(request: string, response: string): string {
+    var acceptEncoding = extractCertainHeader(request, 'Accept-Encoding: ');
+    if (acceptEncoding) {
+        if (acceptEncoding === 'invalid-encoding') {
+            return response
+        } else {
+            response = response.replace('HTTP/1.1 200 OK\r\n', 'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n');
+            console.log("Response after injection: ", response);
+            return response;
+        }
+    } else {
+        return response
     }
 }
