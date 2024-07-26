@@ -1,5 +1,6 @@
 
 import fs from 'node:fs';
+import { compressGzip } from './compressors';
 
 export function generateResponseFromRequest(request: string, method:string, path: string, param: string, headers: string[]): string {
 
@@ -65,25 +66,23 @@ export function extractCertainHeader(request: string, header: string): string {
 }
 
 export function injectCompressedResponse(request: string, response: string): string {
+
     var acceptEncoding = extractCertainHeader(request, 'Accept-Encoding: ');
     var encodingArray = acceptEncoding.split(', ');
+    
     for (var encode of encodingArray) {
+
         if (encode.includes('gzip')) {
+
             response = response.replace('HTTP/1.1 200 OK\r\n', 'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n');
+            var responseBody = response.split('\r\n\r\n')[1];
+            var compressedBody = compressGzip(responseBody);
+            response = response.replace(responseBody, compressedBody.toString('hex'));
             console.log("Response after injection: ", response);
             return response;
+        
         }
+
     }
     return response;
-    // if (acceptEncoding) {
-    //     if (acceptEncoding === 'invalid-encoding') {
-    //         return response
-    //     } else {
-    //         response = response.replace('HTTP/1.1 200 OK\r\n', 'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n');
-    //         console.log("Response after injection: ", response);
-    //         return response;
-    //     }
-    // } else {
-    //     return response
-    // }
 }
