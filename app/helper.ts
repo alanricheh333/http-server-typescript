@@ -66,15 +66,24 @@ export function extractCertainHeader(request: string, header: string): string {
 
 export function injectCompressedResponse(request: string, response: string): string {
     var acceptEncoding = extractCertainHeader(request, 'Accept-Encoding: ');
-    if (acceptEncoding) {
-        if (acceptEncoding === 'invalid-encoding') {
-            return response
-        } else {
+    var encodingArray = acceptEncoding.split(', ');
+    for (var encode of encodingArray) {
+        if (encode.includes('gzip')) {
             response = response.replace('HTTP/1.1 200 OK\r\n', 'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n');
             console.log("Response after injection: ", response);
             return response;
         }
-    } else {
-        return response
     }
+    return response;
+    // if (acceptEncoding) {
+    //     if (acceptEncoding === 'invalid-encoding') {
+    //         return response
+    //     } else {
+    //         response = response.replace('HTTP/1.1 200 OK\r\n', 'HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n');
+    //         console.log("Response after injection: ", response);
+    //         return response;
+    //     }
+    // } else {
+    //     return response
+    // }
 }
